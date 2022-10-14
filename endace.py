@@ -66,13 +66,6 @@ class HTTPException(Exception):
 
 class VectraDetection:
 
-    @staticmethod
-    def _get_start_ts(time_string, max_hours=1):
-        start_ts_dt = datetime.strptime(time_string, "%Y-%m-%dT%H:%M:%SZ")
-        time_delta = datetime.now() - timedelta(hours=max_hours)
-        start_ts = start_ts_dt if start_ts_dt > time_delta else time_delta
-        return start_ts
-
     def __init__(self, detection):
         self.id:int = int(detection['id'])
         self.src:str = detection['src_ip']
@@ -85,13 +78,6 @@ class VectraDetection:
         destinations = set()
         for details in detection['grouped_details']:
             dest_ips = details.get('dst_ips', [])
-            # for ip in dest_ips:
-            #     if not ipaddress.ip_address(ip).is_private:
-            #         dest_ips.pop(ip)
-            # dest_ports = details.get('dst_ports', [])
-            # Get all possible combinations
-            # combinations = list(product(dest_ips, dest_ports))
-            # destinations.add(combinations)
             destinations.update(dest_ips)
         return list(destinations)
 
