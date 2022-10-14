@@ -67,7 +67,7 @@ class HTTPException(Exception):
 class VectraDetection:
 
     @staticmethod
-    def _get_start_ts(time_string, max_hours=8):
+    def _get_start_ts(time_string, max_hours=1):
         start_ts_dt = datetime.strptime(time_string, "%Y-%m-%dT%H:%M:%SZ")
         time_delta = datetime.now() - timedelta(hours=max_hours)
         start_ts = start_ts_dt if start_ts_dt > time_delta else time_delta
@@ -77,7 +77,7 @@ class VectraDetection:
         self.id:int = int(detection['id'])
         self.src:str = detection['src_ip']
         self.destinations:list = self._get_destinations(detection)
-        self.first_timestamp:str = VectraDetection._get_start_ts(detection['first_timestamp'])
+        self.first_timestamp:str = datetime.strptime(detection['first_timestamp'], "%Y-%m-%dT%H:%M:%SZ")
         self.last_timestamp:str = datetime.strptime(detection['last_timestamp'], "%Y-%m-%dT%H:%M:%SZ")
         self.note_id:Optional[int] = None
 
@@ -199,6 +199,14 @@ class EndaceClient(object):
         # Make the timestamps tz aware (UTC) and convert to milliseconds
         start_ts = int(vectra_detection.first_timestamp.replace(tzinfo=timezone.utc).timestamp()*1000)
         end_ts = int(vectra_detection.last_timestamp.replace(tzinfo=timezone.utc).timestamp()*1000)
+        delta_time = end_ts - start_ts
+        # If delta time is more than 1 hour, make start time 1 hour before end time
+        if delta_time > 3600000:
+            start_ts = end_ts - 3600000
+        # Add 4 minutes to end time to pick up any event right after this update
+        end_ts = end_ts + 240000
+        # Add 2 minutes before to start time to avoid a single sample to be all to the left
+        start_ts = start_ts - 120000
         # If we have <5 destinations, filter by destination, else only src
         if len (destination_ips) > 5 or len (destination_ips)<1:
             link = "{url}/vision2/v1/pivotintovision/?datasources=tag%3Aall&title={title}&start={start}&end={end}&ip={src}&tools=trafficOverTime_by_app%2Cconversations_by_ipaddress".format(
@@ -209,12 +217,15 @@ class EndaceClient(object):
                     src = source_ip
                 )
         else:
+            separator = ',' + source_ip + '%26'
+            src_dst_ips_pair = separator.join(destination_ips)
+            ip_conversation_string = source_ip + '%26' + src_dst_ips_pair
             link = "{url}/vision2/v1/pivotintovision/?datasources=tag%3Aall&title={title}&start={start}&end={end}&ip_conv={ip_conversations}&tools=trafficOverTime_by_app%2Cconversations_by_ipaddress".format(
                     url = self.url,
                     title = title,
                     start = str(start_ts),
                     end = str(end_ts),
-                    ip_conversations = '{}%26'.format(source_ip)+',{}%26'.format(source_ip).join(destination_ips)
+                    ip_conversations = ip_conversation_string
                 )
         return link
 
