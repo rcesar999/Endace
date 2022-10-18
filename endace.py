@@ -37,9 +37,9 @@ __status__ = "Production"
 logging.basicConfig(level=logging.INFO)
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
-VECTRA_APPLIANCE_URL = 'https://ec2-54-151-119-228.us-west-1.compute.amazonaws.com'
-API_TOKEN = '3aa8f81f721a49d25097d4589b6906fbd3c201c6'
-ENDACE_URL = 'https://dp9-2.lab.endace.com'
+VECTRA_APPLIANCE_URL = 'https://<BRAIN_FQDN>'
+API_TOKEN = 'youneedanapikeyforthistowork'
+ENDACE_URL = 'https://endace.example.com'
 
 
 class HTTPException(Exception):
