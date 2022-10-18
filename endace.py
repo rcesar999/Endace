@@ -37,9 +37,9 @@ __status__ = "Production"
 logging.basicConfig(level=logging.INFO)
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
-VECTRA_APPLIANCE_URL = 'https://<BRAIN_FQDN>'
-API_TOKEN = 'youneedanapikeyforthistowork'
-ENDACE_URL = 'https://endace.example.com'
+VECTRA_APPLIANCE_URL = 'https://ec2-54-151-119-228.us-west-1.compute.amazonaws.com'
+API_TOKEN = '3aa8f81f721a49d25097d4589b6906fbd3c201c6'
+ENDACE_URL = 'https://dp9-2.lab.endace.com'
 
 
 class HTTPException(Exception):
@@ -159,6 +159,8 @@ class VectraAPIWrapper(vectra.VectraClientV2_2):
         already_tagged_detections = self._get_tagged_detections(tag='Endace')
         for detection_id, detection in already_tagged_detections.items():
             note = self._get_endace_note(detection_id)
+            if note == None:
+                break
             last_modified = note['date_modified'] if note.get('date_modified') else note['date_created']
             note_last_timestamp = datetime.strptime(last_modified, "%Y-%m-%dT%H:%M:%SZ")
             # Only update if detection was updated more recently than note
